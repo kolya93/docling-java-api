@@ -1,0 +1,3 @@
+version=25.0.2
+platform=Windows 11 amd64
+input_packages=qrcode==7.4.2

@@ -1,0 +1,34 @@
+// Adapted from https://github.com/graalvm/graal-languages-demos
+//  Copyright (c) 2024, 2026 Oracle and/or its affiliates
+//  Licensed under the Universal Permissive License v1.0
+//  https://oss.oracle.com/licenses/upl
+
+package org.example;
+
+import java.io.*;
+import javax.imageio.ImageIO;
+import javax.swing.*;
+
+public class App {
+    public static void main(String[] args) throws IOException {
+        String path = System.getProperty("graalpy.resources");
+        if (path == null || path.isBlank() || path.equals("null")) {
+            System.err.println("Please provide 'graalpy.resources' system property.");
+            System.exit(1);
+        }
+        try (var context = GraalPy.createPythonContext(path)) { // ①
+            QRCode qrCode = context.eval("python", "import qrcode; qrcode").as(QRCode.class); // ②
+            IO io = context.eval("python", "import io; io").as(IO.class);
+
+            IO.BytesIO bytesIO = io.BytesIO(); // ③
+            qrCode.make("Hello from GraalPy on JDK " + System.getProperty("java.version")).save(bytesIO);
+
+            var qrImage = ImageIO.read(new ByteArrayInputStream(bytesIO.getvalue().toByteArray())); // ④
+            JFrame frame = new JFrame("QR Code");
+            frame.getContentPane().add(new JLabel(new ImageIcon(qrImage)));
+            frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+            frame.setSize(400, 400);
+            frame.setVisible(true);
+        }
+    }
+}
